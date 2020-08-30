@@ -460,7 +460,7 @@ class CRM_Membershipextra_Form_Search_Membership extends CRM_Contact_Form_Search
    * @return string
    */
   public function templateFile() {
-    return 'CRM/Contact/Form/Search/Custom/Membership.tpl';
+    return 'CRM/Membershipextra/Form/Search/Membership.tpl';
   }
 
   /**
