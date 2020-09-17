@@ -11,7 +11,7 @@ This Extension provide Custom Membership Search which contain Membership Type In
 ## Requirements
 
 * PHP v7.2+
-* CiviCRM (5.27)
+* CiviCRM (5.21)
 
 ## Installation (Web UI)
 
@@ -58,4 +58,9 @@ Front end Validation for Additional Renewal:
 Front end Validation for Membership Type restricted to Group Contact:
 
 ![Screenshot](/images/group_restriction.png)
+
+
+Membership Include / Exclude Custom Search:
+
+![Screenshot](/images/membership_custom_search.png)
 
