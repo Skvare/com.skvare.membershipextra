@@ -1,17 +1,17 @@
 # com.skvare.membershipextra
 
-
 This extension give multiple option to control membership renewal. For Fixed Membership type, you can set restrict 
-Renewal until Rollver date is over. For Rolling Membership type you can set day and unit for that. 
+Renewal until Rollver date is over. For Rolling Membership type you can set day and unit for restrict membership renewal before end date.
 
-This Extension provide Custom Membership Search which contain Membership Type Include Include along with Memebership Status and 
-their dates. You can find contact those have Membership Type A but don't have Membership Type B.
+You can restrict the Membership Type Signup/Renewal based on Group contact, If contact is not part of Group.
+
+This Extension provide Custom Membership Search which contain Membership Type Include Exclude along with Memebership Status and their dates. You can find contact those have Membership Type A but don't have Membership Type B.
 
 
 ## Requirements
 
 * PHP v7.2+
-* CiviCRM (5.7)
+* CiviCRM (5.27)
 
 ## Installation (Web UI)
 
@@ -39,5 +39,23 @@ cv en membershipextra
 
 ## Usage
 
-You can visit Membership type, Edit existing membership type.
+You can visit Membership type, Edit existing membership type. (Administer CiviCRM › CiviMember › Membership Types)
+
+Fixed Membership Type setting:
+
+![Screenshot](/images/fixed_membership.png)
+
+
+Rolling Membership Type settings:
+
+![Screenshot](/images/rolling_membership.png)
+
+
+Front end Validation for Additional Renewal:
+
+![Screenshot](/images/stop_renewal.png)
+
+Front end Validation for Membership Type restricted to Group Contact:
+
+![Screenshot](/images/group_restriction.png)
 

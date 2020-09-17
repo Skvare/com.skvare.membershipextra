@@ -180,14 +180,14 @@ function membershipextra_civicrm_buildForm($formName, &$form) {
 
     $form->addElement('checkbox', 'limit_renewal', ts('Limit renewal to 1 period ahead'));
 
-    $form->add('text', 'allow_renewal_before', ts('Allow Renewal Before ending'));
+    $form->add('text', 'allow_renewal_before', ts('Allow Period of Renewal before end date'));
     $units = CRM_Core_SelectValues::unitList();
     unset($units['year']);
 
     $form->addElement('select', 'allow_renewal_before_unit', ts('Allow Renewal Before ending'), ['' => '-select'] + $units);
 
     $groups = CRM_Core_PseudoConstant::nestedGroup();
-    $form->add('select', 'restrict_to_groups', ts('Contact in this groups see membership'),
+    $form->add('select', 'restrict_to_groups', ts('Contact in this groups signup/renew membership type'),
       $groups, FALSE, ['class' => 'crm-select2 huge', 'multiple' => 1]);
     if ($form->_action & CRM_Core_Action::UPDATE) {
       $membershipExtras = CRM_Membershipextra_Utils::getSettings($form->_id);
@@ -229,9 +229,9 @@ function membershipextra_civicrm_postProcess($formName, &$form) {
 
 function membershipextra_civicrm_validateForm($formName, &$fields, &$files, &$form, &$errors) {
   if ($formName == 'CRM_Contribute_Form_Contribution_Main') {
-    if (!CRM_Utils_System::isUserLoggedIn()) {
-      return;
-    }
+    //if (!CRM_Utils_System::isUserLoggedIn()) {
+      //return;
+    //}
 
     // Check Membership configured in the form.
     list($formMembershipTypeIds, $membershipExtras, $groupConfigured) = CRM_Membershipextra_Utils::getMembershipTypeConfiguredonForm($form);
@@ -246,7 +246,7 @@ function membershipextra_civicrm_validateForm($formName, &$fields, &$files, &$fo
     }
     // get groups associated with contact
     $groupContact = [];
-    $groups = CRM_Core_PseudoConstant::nestedGroup();
+    $groups = CRM_Core_PseudoConstant::nestedGroup(FALSE);
     if (!empty($groupConfigured)) {
       $result = civicrm_api3('Contact', 'getsingle', [
         'return' => ["group"],
@@ -257,6 +257,7 @@ function membershipextra_civicrm_validateForm($formName, &$fields, &$files, &$fo
         $groupContact = explode(',', $result['groups']);
       }
     }
+
     // get contact membership types
     list($contactMembershipType, $contactMembershipTypeDetails) = CRM_Membershipextra_Utils::getContactMemberships($contact_id);
     foreach ($fields as $key => $value) {
@@ -264,11 +265,12 @@ function membershipextra_civicrm_validateForm($formName, &$fields, &$files, &$fo
         if (!is_array($value)) {
           if (array_key_exists($value, $formMembershipTypeIds)) { // this is membership type option
             $submittedMembershipType = $formMembershipTypeIds[$value]; // get submitted membership type id
+
             if (in_array($submittedMembershipType, $contactMembershipType)) {
               if (array_key_exists($submittedMembershipType, $membershipExtras)) {
 
                 $membershipDetail = $membershipExtras[$submittedMembershipType];
-                
+
                 $validateRenewalLimit = TRUE;
                 if ($membershipDetail['period_type'] == 'fixed' && !empty($membershipDetail['limit_renewal'])) {
 
@@ -287,22 +289,22 @@ function membershipextra_civicrm_validateForm($formName, &$fields, &$files, &$fo
 
                 // if denied
                 if (!$validateRenewalLimit) {
-                  $errors[$key] = ts("You already have Active Membership, Admin disabled additional renewal until {$rollverDayFomated}.");
+                  $errors[$key] = ts("You already have Active Membership, Admin has disabled additional renewal until {$rollverDayFomated}.");
                 }
-
-                // process restrict gorup id on membership type.
-                if (!empty($membershipDetail['restrict_to_groups'])) {
-                  $isGroupPresent = array_intersect($membershipDetail['restrict_to_groups'], $groupContact);
-                  $groupRequired = [];
-                  foreach ($membershipDetail['restrict_to_groups'] as $gid) {
-                    $groupRequired[] = $groups[$gid];
-                  }
-                  // show the list of groups with error message
-                  $groupRequiredList = implode(', ', $groupRequired);
-                  if (empty($isGroupPresent)) {
-                    $errors[$key] = ts("This Membership subscription only available for {$groupRequiredList} groups(s).");
-                  }
-                }
+              }
+            }
+            // process restrict gorup id on membership type.
+            $membershipDetail = $membershipExtras[$submittedMembershipType];
+            if (!empty($membershipDetail['restrict_to_groups'])) {
+              $isGroupPresent = array_intersect($membershipDetail['restrict_to_groups'], $groupContact);
+              $groupRequired = [];
+              foreach ($membershipDetail['restrict_to_groups'] as $gid) {
+                $groupRequired[] = $groups[$gid];
+              }
+              // show the list of groups with error message
+              $groupRequiredList = implode(', ', $groupRequired);
+              if (empty($isGroupPresent)) {
+                $errors[$key] = ts("This Membership subscription only available for member(s) of {$groupRequiredList} groups(s). Please contact Admin.");
               }
             }
           }
@@ -350,7 +352,17 @@ function _membershipextra_get_form_contact_id($form) {
       }
     }
   }
-
+  /*
+   // apply dedue rule incase of anonymous user
+  if (empty($contact_id)) {
+    $contactType = 'Individual';
+    $exceptions = [];
+    $ids = CRM_Contact_BAO_Contact::getDuplicateContacts($form->_submitValues, $contactType, 'Unsupervised', $exceptions, FALSE);
+    if ($ids) {
+      $contact_id = $ids[0];
+    }
+  }
+  */
   return $contact_id;
 }
 

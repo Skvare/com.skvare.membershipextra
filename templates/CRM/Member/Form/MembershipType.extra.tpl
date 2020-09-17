@@ -34,14 +34,14 @@
     <tr class="crm-membership-type-form-block-allow_renewal_before_unit">
         <td class="label">{$form.allow_renewal_before.label}</td>
         <td>{$form.allow_renewal_before.html} {$form.allow_renewal_before_unit.html}<br/>
-            For Rolling type, existing member wil not allow to renew their membership before these this setting.
+            For Rolling type, existing members wil allow to renew their membership after above above period.
             <br/><br/>
         </td>
     </tr>
     <tr class="crm-membership-type-form-block-restrict_to_groups">
         <td class="label">{$form.restrict_to_groups.label}</td>
         <td>{$form.restrict_to_groups.html}<br/>
-            Contact Subscribed to selected group can see membership option on online page.<br/><br/>
+            Contact Subscribed to selected group only signup/renew their membership through online page.<br/><br/>
         </td>
     </tr>
 </table>
