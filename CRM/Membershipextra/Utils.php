@@ -4,19 +4,25 @@ use CRM_Membershipextra_ExtensionUtil as E;
 
 class CRM_Membershipextra_Utils {
 
+  public static function getSettingsNames(): array {
+    return [
+      'limit_renewal',
+      'renewal_period_number',
+      'renewal_period_unit',
+      'restrict_to_groups',
+      'check_unauthenticated_contacts',
+    ];
+  }
+
   /**
    * @param $typeID
    * @return array
    */
   public static function getSettings($typeID) {
-    // group name not used anymore, so fetch only normalization related setting (also suppress warning)
-    $settingsField = ['limit_renewal', 'renewal_period_number', 'renewal_period_unit', 'restrict_to_groups'];
-    $settings = [];
-    foreach ($settingsField as $fieldName) {
-      $settings[$fieldName] = CRM_Core_BAO_Setting::getItem('Membershipextra', $fieldName . '_' . $typeID);
+    foreach (self::getSettingsNames() as $name) {
+      $settings[$name] = Civi::settings()->get("Membershipextra:$name:$typeID");
     }
-
-    return $settings;
+    return $settings ?? [];
   }
 
   /**
@@ -25,7 +31,7 @@ class CRM_Membershipextra_Utils {
    * @param $typeID
    */
   public static function setSetting($value, $name, $typeID) {
-    CRM_Core_BAO_Setting::setItem($value, 'Membershipextra', $name . '_' . $typeID);
+    Civi::settings()->set("Membershipextra:$name:$typeID", $value);
   }
 
   /**
@@ -35,49 +41,51 @@ class CRM_Membershipextra_Utils {
    */
   public static function getMembershipTypeConfiguredonForm($form) {
     $formMembershipTypeIds = $membershipExtras = $groupConfigured = [];
-    foreach ($form->_values['fee'] as $fee_id => $fee) {
-      if (!is_array($fee['options']))
+    foreach ($form->_values['fee'] as $fee) {
+      if (!is_array($fee['options'])) {
         continue;
-      foreach ($fee['options'] as $option_id => &$option) {
-        // if priset contain the membership type, then proceed.
+      }
+      foreach ($fee['options'] as $option) {
+        // if priceset contain the membership type, then proceed.
         if (isset($option['membership_type_id'])) {
-          $formMembershipTypeIds[$option_id] = $option['membership_type_id'];
+          $membershipTypeId = $option['membership_type_id'];
+          $formMembershipTypeIds[$option['price_field_id']] = $membershipTypeId;
 
-          // get Custom Setting for each Membersihp type
-          $membershipExtras[$option['membership_type_id']] = CRM_Membershipextra_Utils::getSettings($option['membership_type_id']);
-          $membershipExtras[$option['membership_type_id']]['my_id'] = $option['membership_type_id'];
+          // get Custom Setting for each Membership type
+          $membershipExtras[$membershipTypeId] = CRM_Membershipextra_Utils::getSettings($membershipTypeId);
+          $membershipExtras[$membershipTypeId]['my_id'] = $membershipTypeId;
 
           // get membership details from civicrm core function.
-          $membershipExtrasDetails = CRM_Member_BAO_MembershipType::getMembershipTypeDetails($option['membership_type_id']);
-          $membershipExtrasAdditionalDetails = [$option['membership_type_id'] => $membershipExtrasDetails];
+          $membershipExtrasDetails = CRM_Member_BAO_MembershipType::getMembershipType($membershipTypeId);
+          $membershipExtrasAdditionalDetails = [$membershipTypeId => $membershipExtrasDetails];
 
-          // convert rollver over period to Text format.
+          // convert rollover over period to Text format.
           CRM_Member_BAO_MembershipType::convertDayFormat($membershipExtrasAdditionalDetails);
 
           $membershipExtrasDetails = reset($membershipExtrasAdditionalDetails);
 
           // if membership of fixed type
           if ($membershipExtrasDetails['period_type'] == 'fixed') {
-            $membershipExtras[$option['membership_type_id']]['period_type'] = 'fixed';
-            $membershipExtras[$option['membership_type_id']]['duration_unit'] = $membershipExtrasDetails['duration_unit'];
-            $membershipExtras[$option['membership_type_id']]['duration_interval'] = $membershipExtrasDetails['duration_interval'];
-            $membershipExtras[$option['membership_type_id']]['fixed_period_start_day'] = CRM_Utils_Array::value('fixed_period_start_day', $membershipExtrasDetails);
-            $membershipExtras[$option['membership_type_id']]['fixed_period_rollover_day'] = $membershipExtrasDetails['fixed_period_rollover_day'];
+            $membershipExtras[$membershipTypeId]['period_type'] = 'fixed';
+            $membershipExtras[$membershipTypeId]['duration_unit'] = $membershipExtrasDetails['duration_unit'];
+            $membershipExtras[$membershipTypeId]['duration_interval'] = $membershipExtrasDetails['duration_interval'];
+            $membershipExtras[$membershipTypeId]['fixed_period_start_day'] = CRM_Utils_Array::value('fixed_period_start_day', $membershipExtrasDetails);
+            $membershipExtras[$membershipTypeId]['fixed_period_rollover_day'] = $membershipExtrasDetails['fixed_period_rollover_day'];
 
             // unset custom field belong to rolling type
-            unset($membershipExtras[$option['membership_type_id']]['renewal_period_number']);
-            unset($membershipExtras[$option['membership_type_id']]['renewal_period_unit']);
+            unset($membershipExtras[$membershipTypeId]['renewal_period_number']);
+            unset($membershipExtras[$membershipTypeId]['renewal_period_unit']);
           }
           else {
-            $membershipExtras[$option['membership_type_id']]['period_type'] = 'rolling';
+            $membershipExtras[$membershipTypeId]['period_type'] = 'rolling';
 
             // unset custom field belong to fixed type
-            unset($membershipExtras[$option['membership_type_id']]['limit_renewal']);
+            unset($membershipExtras[$membershipTypeId]['limit_renewal']);
           }
 
           // check group limitation applied on membership type
-          if (!empty($membershipExtras[$option['membership_type_id']]['restrict_to_groups'])) {
-            $groupConfigured = array_merge($groupConfigured, $membershipExtras[$option['membership_type_id']]['restrict_to_groups']);
+          if (!empty($membershipExtras[$membershipTypeId]['restrict_to_groups'])) {
+            $groupConfigured = array_merge($groupConfigured, $membershipExtras[$membershipTypeId]['restrict_to_groups']);
           }
         }
       }
@@ -189,5 +197,6 @@ class CRM_Membershipextra_Utils {
     // deny
     return [FALSE, $rollverDayFomated];
   }
+
 }
 
