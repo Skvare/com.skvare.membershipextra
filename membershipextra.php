@@ -141,36 +141,6 @@ function membershipextra_civicrm_themes(&$themes) {
   _membershipextra_civix_civicrm_themes($themes);
 }
 
-// --- Functions below this ship commented out. Uncomment as required. ---
-
-/**
- * Implements hook_civicrm_preProcess().
- *
- * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_preProcess
- *
-function membershipextra_civicrm_preProcess($formName, &$form) {
-
-} // */
-
-/**
- * Implements hook_civicrm_navigationMenu().
- *
- * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_navigationMenu
- *
-function membershipextra_civicrm_navigationMenu(&$menu) {
-  _membershipextra_civix_insert_navigation_menu($menu, 'Mailings', array(
-    'label' => E::ts('New subliminal message'),
-    'name' => 'mailing_subliminal_message',
-    'url' => 'civicrm/mailing/subliminal',
-    'permission' => 'access CiviMail',
-    'operator' => 'OR',
-    'separator' => 0,
-  ));
-  _membershipextra_civix_navigationMenu($menu);
-} // */
-
-
-
 function membershipextra_civicrm_buildForm($formName, &$form) {
   if ($formName == 'CRM_Member_Form_MembershipType') {
     $membershipTypes = CRM_Member_PseudoConstant::membershipType();
@@ -178,16 +148,16 @@ function membershipextra_civicrm_buildForm($formName, &$form) {
       unset($membershipTypes[$form->_id]);
     }
 
-    $form->addElement('checkbox', 'limit_renewal', ts('Limit renewal to 1 period ahead'));
+    $form->addElement('checkbox', 'limit_renewal', E::ts('Limit renewal to 1 period ahead'));
 
-    $form->add('text', 'allow_renewal_before', ts('Allow Period of Renewal before end date'));
+    $form->add('text', 'renewal_period_number', E::ts('Disallow renewal until'));
     $units = CRM_Core_SelectValues::unitList();
     unset($units['year']);
 
-    $form->addElement('select', 'allow_renewal_before_unit', ts('Allow Renewal Before ending'), ['' => '-select'] + $units);
+    $form->addElement('select', 'renewal_period_unit', E::ts('Disallow renewal until'), ['' => '-select'] + $units);
 
     $groups = CRM_Core_PseudoConstant::nestedGroup();
-    $form->add('select', 'restrict_to_groups', ts('Contact in this groups signup/renew membership type'),
+    $form->add('select', 'restrict_to_groups', E::ts('Only allow members of groups'),
       $groups, FALSE, ['class' => 'crm-select2 huge', 'multiple' => 1]);
     if ($form->_action & CRM_Core_Action::UPDATE) {
       $membershipExtras = CRM_Membershipextra_Utils::getSettings($form->_id);
@@ -209,14 +179,14 @@ function membershipextra_civicrm_postProcess($formName, &$form) {
     }
     if ($id) {
       $limit_renewal = $form->_submitValues['limit_renewal'] ?? 0;
-      $allow_renewal_before = $form->_submitValues['allow_renewal_before'] ?? 0;
-      $allow_renewal_before_unit = $form->_submitValues['allow_renewal_before_unit'] ?? '';
-      $allow_renewal_before_unit = $form->_submitValues['restrict_to_groups'] ?? '';
+      $renewal_period_number = $form->_submitValues['renewal_period_number'] ?? 0;
+      $renewal_period_unit = $form->_submitValues['renewal_period_unit'] ?? '';
+      $restrict_to_groups = $form->_submitValues['restrict_to_groups'] ?? '';
 
       $membershipExtras = [
         'limit_renewal' => $form->_submitValues['limit_renewal'] ?? 0,
-        'allow_renewal_before' => $form->_submitValues['allow_renewal_before'] ?? 0,
-        'allow_renewal_before_unit' => $form->_submitValues['allow_renewal_before_unit'] ?? '',
+        'renewal_period_number' => $form->_submitValues['renewal_period_number'] ?? 0,
+        'renewal_period_unit' => $form->_submitValues['renewal_period_unit'] ?? '',
         'restrict_to_groups' => $form->_submitValues['restrict_to_groups'] ?? '',
       ];
       foreach ($membershipExtras as $name => $value) {
@@ -230,11 +200,11 @@ function membershipextra_civicrm_postProcess($formName, &$form) {
 function membershipextra_civicrm_validateForm($formName, &$fields, &$files, &$form, &$errors) {
   if ($formName == 'CRM_Contribute_Form_Contribution_Main') {
     //if (!CRM_Utils_System::isUserLoggedIn()) {
-      //return;
+    //return;
     //}
 
     // Check Membership configured in the form.
-    list($formMembershipTypeIds, $membershipExtras, $groupConfigured) = CRM_Membershipextra_Utils::getMembershipTypeConfiguredonForm($form);
+    [$formMembershipTypeIds, $membershipExtras, $groupConfigured] = CRM_Membershipextra_Utils::getMembershipTypeConfiguredonForm($form);
     // if no membership on form, do not go further.
     if (empty($formMembershipTypeIds))
       return;
@@ -259,7 +229,7 @@ function membershipextra_civicrm_validateForm($formName, &$fields, &$files, &$fo
     }
 
     // get contact membership types
-    list($contactMembershipType, $contactMembershipTypeDetails) = CRM_Membershipextra_Utils::getContactMemberships($contact_id);
+    [$contactMembershipType, $contactMembershipTypeDetails] = CRM_Membershipextra_Utils::getContactMemberships($contact_id);
     foreach ($fields as $key => $value) {
       if ((substr($key, 0, 6) == 'price_') && is_numeric(substr($key, 6))) {
         if (!is_array($value)) {
@@ -276,20 +246,22 @@ function membershipextra_civicrm_validateForm($formName, &$fields, &$files, &$fo
 
                   $memberhipID = CRM_Utils_Array::key($submittedMembershipType, $contactMembershipType);
                   $endDate = $contactMembershipTypeDetails[$memberhipID]['end_date'];
-                  list($validateRenewalLimit, $rollverDayFomated) = CRM_Membershipextra_Utils::validation($submittedMembershipType, $endDate, $membershipDetail);
+                  [$validateRenewalLimit, $rolloverDayFomatted] = CRM_Membershipextra_Utils::validation($submittedMembershipType, $endDate, $membershipDetail);
 
                 }
-                elseif ($membershipDetail['period_type'] == 'rolling' && !empty($membershipDetail['allow_renewal_before'])) {
+                elseif ($membershipDetail['period_type'] == 'rolling' && !empty($membershipDetail['renewal_period_number'])) {
 
                   $memberhipID = CRM_Utils_Array::key($submittedMembershipType, $contactMembershipType);
                   $endDate = $contactMembershipTypeDetails[$memberhipID]['end_date'];
-                  list($validateRenewalLimit, $rollverDayFomated) = CRM_Membershipextra_Utils::validationRolling($submittedMembershipType, $endDate, $membershipDetail);
+                  [$validateRenewalLimit, $rolloverDayFomatted] = CRM_Membershipextra_Utils::validationRolling($submittedMembershipType, $endDate, $membershipDetail);
 
                 }
 
                 // if denied
                 if (!$validateRenewalLimit) {
-                  $errors[$key] = ts("You already have Active Membership, Admin has disabled additional renewal until {$rollverDayFomated}.");
+                  $errors[$key] = E::ts("It is too early to renew your "
+                    . "membership. Please try again after %1.",
+                    [1 => $rolloverDayFomatted]);
                 }
               }
             }
@@ -304,7 +276,9 @@ function membershipextra_civicrm_validateForm($formName, &$fields, &$files, &$fo
               // show the list of groups with error message
               $groupRequiredList = implode(', ', $groupRequired);
               if (empty($isGroupPresent)) {
-                $errors[$key] = ts("This Membership subscription only available for member(s) of {$groupRequiredList} groups(s). Please contact Admin.");
+                $errors[$key] = E::ts("This membership type is only available "
+                  . "to members of the following group(s): %1. Please contact "
+                  . "the administrator.", [1 => $groupRequiredList]);
               }
             }
           }
