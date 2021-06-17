@@ -10,7 +10,7 @@ class CRM_Membershipextra_Utils {
    */
   public static function getSettings($typeID) {
     // group name not used anymore, so fetch only normalization related setting (also suppress warning)
-    $settingsField = ['limit_renewal', 'allow_renewal_before', 'allow_renewal_before_unit', 'restrict_to_groups'];
+    $settingsField = ['limit_renewal', 'renewal_period_number', 'renewal_period_unit', 'restrict_to_groups'];
     $settings = [];
     foreach ($settingsField as $fieldName) {
       $settings[$fieldName] = CRM_Core_BAO_Setting::getItem('Membershipextra', $fieldName . '_' . $typeID);
@@ -65,8 +65,8 @@ class CRM_Membershipextra_Utils {
             $membershipExtras[$option['membership_type_id']]['fixed_period_rollover_day'] = $membershipExtrasDetails['fixed_period_rollover_day'];
 
             // unset custom field belong to rolling type
-            unset($membershipExtras[$option['membership_type_id']]['allow_renewal_before']);
-            unset($membershipExtras[$option['membership_type_id']]['allow_renewal_before_unit']);
+            unset($membershipExtras[$option['membership_type_id']]['renewal_period_number']);
+            unset($membershipExtras[$option['membership_type_id']]['renewal_period_unit']);
           }
           else {
             $membershipExtras[$option['membership_type_id']]['period_type'] = 'rolling';
@@ -174,7 +174,7 @@ class CRM_Membershipextra_Utils {
    */
   public static function validationRolling($membershipTypeId, $currentEndDate, $membershipDetail) {
     // substract the day and month from current end date, that;s the rollover day for rolling membership type
-    $rolloverPeriodDay = $membershipDetail['allow_renewal_before'] . ' ' . $membershipDetail['allow_renewal_before_unit'] . ' + 1 day';
+    $rolloverPeriodDay = $membershipDetail['renewal_period_number'] . ' ' . $membershipDetail['renewal_period_unit'] . ' + 1 day';
     $rollverDay = date('Ymd', strtotime("{$currentEndDate} - {$rolloverPeriodDay}"));
 
     // show when renewal is allowed
