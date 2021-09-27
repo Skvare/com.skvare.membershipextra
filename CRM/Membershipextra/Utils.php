@@ -45,11 +45,11 @@ class CRM_Membershipextra_Utils {
       if (!is_array($fee['options'])) {
         continue;
       }
-      foreach ($fee['options'] as $option) {
+      foreach ($fee['options'] as $option_id => $option) {
         // if priceset contain the membership type, then proceed.
         if (isset($option['membership_type_id'])) {
           $membershipTypeId = $option['membership_type_id'];
-          $formMembershipTypeIds[$option['price_field_id']] = $membershipTypeId;
+          $formMembershipTypeIds[$option_id] = $membershipTypeId;
 
           // get Custom Setting for each Membership type
           $membershipExtras[$membershipTypeId] = CRM_Membershipextra_Utils::getSettings($membershipTypeId);
