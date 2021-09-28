@@ -1,6 +1,7 @@
 {literal}
     <script type="text/javascript">
         CRM.$(function($) {
+            $('.crm-membership-type-form-block-check_unauthenticated_contacts').insertAfter('.crm-membership-type-form-block-period_type');
             $('.crm-membership-type-form-block-limit_renewal').insertAfter('.crm-membership-type-form-block-period_type');
             $('.crm-membership-type-form-block-renewal_period').insertAfter('.crm-membership-type-form-block-period_type');
             $('.crm-membership-type-form-block-restrict_to_groups').insertAfter('.crm-membership-type-form-block-period_type');
@@ -50,6 +51,17 @@
         <td>{$form.restrict_to_groups.html}<br/>
             <span class="description">
                 {ts}On public contribution pages, disallow signup/renewal by contacts not in these groups.{/ts}
+            </span>
+            <br/><br/>
+        </td>
+    </tr>
+    <tr class="crm-membership-type-form-block-check_unauthenticated_contacts">
+        <td class="label">{$form.check_unauthenticated_contacts.label}</td>
+        <td>{$form.check_unauthenticated_contacts.html}<br/>
+            <span class="description">
+                {ts}PRIVACY WARNING: applying signup/renewal restrictions to form submissions by unauthenticated
+                    users may decrease the privacy of your members. Anyone submitting the form will know
+                    whether there is an active membership associated with the submitted contact information.{/ts}
             </span>
             <br/><br/>
         </td>
