@@ -26,7 +26,7 @@
     </script>
 {/literal}
 
-{crmScope extensionKey='org.example.myextension'}
+{crmScope extensionKey='com.skvare.membershipextra'}
 <table class="form-layout-compressed" style="display: none">
     <tr class="crm-membership-type-form-block-limit_renewal">
         <td class="label">{$form.limit_renewal.label}</td>
