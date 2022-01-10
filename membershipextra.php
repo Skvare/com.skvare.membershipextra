@@ -160,8 +160,7 @@ function membershipextra_civicrm_buildForm($formName, &$form) {
     $form->add('select', 'restrict_to_groups', E::ts('Only allow members of groups'),
       $groups, FALSE, ['class' => 'crm-select2 huge', 'multiple' => 1]);
 
-    $form->add('checkbox', 'check_unauthenticated_contacts', E::ts('Apply renewal '
-      . 'restrictions to unauthenticated users'));
+    $form->add('checkbox', 'check_unauthenticated_contacts', E::ts('Apply renewal restrictions to unauthenticated users'));
 
     if ($form->_action & CRM_Core_Action::UPDATE) {
       $membershipExtras = CRM_Membershipextra_Utils::getSettings($form->_id);
@@ -280,8 +279,7 @@ function membershipextra_civicrm_validateForm($formName, &$fields, &$files, &$fo
 
       // if denied
       if (!$validateRenewalLimit) {
-        $errors[$key] = E::ts("It is too early to renew your "
-          . "membership. Please try again after %1.",
+        $errors[$key] = E::ts('It is too early to renew your membership. Please try again after %1.',
           [1 => $rolloverDayFormatted]);
       }
     }
@@ -297,9 +295,7 @@ function membershipextra_civicrm_validateForm($formName, &$fields, &$files, &$fo
     // show the list of groups with error message
     $groupRequiredList = implode(', ', $groupRequired);
     if (empty($isGroupPresent)) {
-      $errors[$key] = E::ts("This membership type is only available "
-        . "to members of the following group(s): %1. Please contact "
-        . "the administrator.", [1 => $groupRequiredList]);
+      $errors[$key] = E::ts('This membership type is only available to members of the following group(s): %1. Please contact the administrator.', [1 => $groupRequiredList]);
     }
   }
 }
