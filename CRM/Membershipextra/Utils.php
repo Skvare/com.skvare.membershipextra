@@ -144,8 +144,11 @@ class CRM_Membershipextra_Utils {
 
       // show when renewal is allowed
       $rollverDayFomated = CRM_Utils_Date::customFormat($rollverDay);
-
-      // current day is in between rollver day and actual end date, then allow renewal
+      // if end is already over then user can renew membership.
+      if ($currentDate >  date('Ymd', strtotime($currentEndDate))) {
+        return [TRUE, $rollverDayFomated];
+      }
+      // current day is in between rollover day and actual end date, then allow renewal
       if ($currentDate >= $rollverDay && $currentDate <= $dateNewEdnDate) {
         // allow
         return [TRUE, $rollverDayFomated];
