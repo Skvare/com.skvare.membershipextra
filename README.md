@@ -1,12 +1,13 @@
 # com.skvare.membershipextra
 
-This extension give multiple option to control membership renewal. For Fixed Membership type, you can set restrict 
-Renewal until Rollver date is over. For Rolling Membership type you can set day and unit for restrict membership renewal before end date.
+This extension gives multiple options to control membership renewal. For the fixed membership type,
+you can restrict renewal until the rollover date is over. For the rolling membership type,
+you can set a day and unit for restricting membership renewal before the end date.
 
-You can restrict the Membership Type Signup/Renewal based on Group contact, If contact is not part of Group.
+You can restrict the membership type signup or renewal based on group contact if the contact is not part of the group.
 
-This Extension provide Custom Membership Search which contain Membership Type Include Exclude along with Memebership Status and their dates. You can find contact those have Membership Type A but don't have Membership Type B.
-
+This extension provides a custom membership search that contains membership types (include, exclude),
+membership status, and dates. You can contact those who have Membership Type A but don't have Membership Type B.
 
 ## Requirements
 
@@ -39,14 +40,14 @@ cv en membershipextra
 
 ## Usage
 
-You can visit Membership type, Edit existing membership type. (Administer CiviCRM › CiviMember › Membership Types)
+You can visit Membership Type and edit an existing membership type. (Administer CiviCRM › CiviMember › Membership Types)
 
 Fixed Membership Type setting:
 
 ![Screenshot](/images/fixed_membership.png)
 
 
-Rolling Membership Type settings:
+Rolling Membership Type Settings:
 
 ![Screenshot](/images/rolling_membership.png)
 
@@ -55,12 +56,12 @@ Front end Validation for Additional Renewal:
 
 ![Screenshot](/images/stop_renewal.png)
 
-Front end Validation for Membership Type restricted to Group Contact:
+Front end Validation for Membership Type is restricted to Group Contact:
 
 ![Screenshot](/images/group_restriction.png)
 
 
-Membership Include / Exclude Custom Search:
+Membership Include or Exclude Custom Search:
 
 ![Screenshot](/images/membership_custom_search.png)
 
