@@ -18,7 +18,6 @@ function membershipextra_civicrm_config(&$config) {
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_xmlMenu
  */
 function membershipextra_civicrm_xmlMenu(&$files) {
-  _membershipextra_civix_civicrm_xmlMenu($files);
 }
 
 /**
@@ -36,7 +35,6 @@ function membershipextra_civicrm_install() {
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_postInstall
  */
 function membershipextra_civicrm_postInstall() {
-  _membershipextra_civix_civicrm_postInstall();
 }
 
 /**
@@ -45,7 +43,6 @@ function membershipextra_civicrm_postInstall() {
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_uninstall
  */
 function membershipextra_civicrm_uninstall() {
-  _membershipextra_civix_civicrm_uninstall();
 }
 
 /**
@@ -63,7 +60,6 @@ function membershipextra_civicrm_enable() {
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_disable
  */
 function membershipextra_civicrm_disable() {
-  _membershipextra_civix_civicrm_disable();
 }
 
 /**
@@ -72,7 +68,7 @@ function membershipextra_civicrm_disable() {
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_upgrade
  */
 function membershipextra_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
-  return _membershipextra_civix_civicrm_upgrade($op, $queue);
+  return;
 }
 
 /**
@@ -84,7 +80,6 @@ function membershipextra_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_managed
  */
 function membershipextra_civicrm_managed(&$entities) {
-  _membershipextra_civix_civicrm_managed($entities);
 }
 
 /**
@@ -97,7 +92,6 @@ function membershipextra_civicrm_managed(&$entities) {
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_caseTypes
  */
 function membershipextra_civicrm_caseTypes(&$caseTypes) {
-  _membershipextra_civix_civicrm_caseTypes($caseTypes);
 }
 
 /**
@@ -111,7 +105,6 @@ function membershipextra_civicrm_caseTypes(&$caseTypes) {
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_angularModules
  */
 function membershipextra_civicrm_angularModules(&$angularModules) {
-  _membershipextra_civix_civicrm_angularModules($angularModules);
 }
 
 /**
@@ -120,7 +113,6 @@ function membershipextra_civicrm_angularModules(&$angularModules) {
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_alterSettingsFolders
  */
 function membershipextra_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
-  _membershipextra_civix_civicrm_alterSettingsFolders($metaDataFolders);
 }
 
 /**
@@ -131,14 +123,12 @@ function membershipextra_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) 
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_entityTypes
  */
 function membershipextra_civicrm_entityTypes(&$entityTypes) {
-  _membershipextra_civix_civicrm_entityTypes($entityTypes);
 }
 
 /**
  * Implements hook_civicrm_thems().
  */
 function membershipextra_civicrm_themes(&$themes) {
-  _membershipextra_civix_civicrm_themes($themes);
 }
 
 function membershipextra_civicrm_buildForm($formName, &$form) {
@@ -198,7 +188,6 @@ function membershipextra_civicrm_postProcess($formName, &$form) {
     }
   }
 }
-
 
 function membershipextra_civicrm_validateForm($formName, &$fields, &$files, &$form, &$errors) {
   if ($formName !== 'CRM_Contribute_Form_Contribution_Main') {
