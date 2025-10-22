@@ -31,14 +31,14 @@ class CRM_Membershipextra_Form_Search_Membership extends CRM_Contact_Form_Search
     $this->_memStatus = CRM_Utils_Array::value('memStatus', $this->_formValues, []);
     $this->_excludeMemStatus = CRM_Utils_Array::value('excludeMemStatus', $this->_formValues, []);
 
-    $this->_memSinceFrom = CRM_Utils_Array::value('member_join_date_low', $this->_formValues);
-    $this->_memSinceTo = CRM_Utils_Array::value('member_join_date_high', $this->_formValues);
+    $this->_memSinceFrom = $this->_formValues['member_join_date_low'] ?? NULL;
+    $this->_memSinceTo = $this->_formValues['member_join_date_high'] ?? NULL;
 
-    $this->_memStartFrom = CRM_Utils_Array::value('member_start_date_low', $this->_formValues);
-    $this->_memStartTo = CRM_Utils_Array::value('member_start_date_high', $this->_formValues);
+    $this->_memStartFrom = $this->_formValues['member_start_date_low'] ?? NULL;
+    $this->_memStartTo = $this->_formValues['member_start_date_high'] ?? NULL;
 
-    $this->_memEndFrom = CRM_Utils_Array::value('member_end_date_low', $this->_formValues);
-    $this->_memEndTo = CRM_Utils_Array::value('member_end_date_high', $this->_formValues);
+    $this->_memEndFrom = $this->_formValues['member_end_date_low'] ?? NULL;
+    $this->_memEndTo = $this->_formValues['member_end_date_high'] ?? NULL;
 
     list($this->_memSinceFrom, $this->_memSinceTo) = $this->getFromTo(CRM_Utils_Array::value('member_join_date_relative', $this->_formValues), $this->_memSinceFrom, $this->_memSinceTo);
     list($this->_memStartFrom, $this->_memStartTo) = $this->getFromTo(CRM_Utils_Array::value('member_start_date_relative', $this->_formValues), $this->_memStartFrom, $this->_memStartTo);
@@ -109,22 +109,22 @@ class CRM_Membershipextra_Form_Search_Membership extends CRM_Contact_Form_Search
    */
   public function setDefaultValues() {
     if (!empty($this->_formValues)) {
-      $defaults['includeMemTypes'] = CRM_Utils_Array::value('includeMemTypes', $this->_formValues);
-      $defaults['excludeMemTypes'] = CRM_Utils_Array::value('excludeMemTypes', $this->_formValues);
-      $defaults['memStatus'] = CRM_Utils_Array::value('memStatus', $this->_formValues);
-      $defaults['excludeMemStatus'] = CRM_Utils_Array::value('excludeMemStatus', $this->_formValues);
+      $defaults['includeMemTypes'] = $this->_formValues['includeMemTypes'] ?? NULL;
+      $defaults['excludeMemTypes'] = $this->_formValues['excludeMemTypes'] ?? NULL;
+      $defaults['memStatus'] = $this->_formValues['memStatus'] ?? NULL;
+      $defaults['excludeMemStatus'] = $this->_formValues['excludeMemStatus'] ?? NULL;
 
-      $defaults['member_join_date_low'] = CRM_Utils_Array::value('member_join_date_low', $this->_formValues);
-      $defaults['member_join_date_high'] = CRM_Utils_Array::value('member_join_date_high', $this->_formValues);
-      $defaults['member_join_date_relative'] = CRM_Utils_Array::value('member_join_date_relative', $this->_formValues);
+      $defaults['member_join_date_low'] = $this->_formValues['member_join_date_low'] ?? NULL;
+      $defaults['member_join_date_high'] = $this->_formValues['member_join_date_high'] ?? NULL;
+      $defaults['member_join_date_relative'] = $this->_formValues['member_join_date_relative'] ?? NULL;
 
-      $defaults['member_start_date_low'] = CRM_Utils_Array::value('member_start_date_low', $this->_formValues);
-      $defaults['member_start_date_high'] = CRM_Utils_Array::value('member_start_date_high', $this->_formValues);
-      $defaults['member_start_date_relative'] = CRM_Utils_Array::value('member_start_date_relative', $this->_formValues);
+      $defaults['member_start_date_low'] = $this->_formValues['member_start_date_low'] ?? NULL;
+      $defaults['member_start_date_high'] = $this->_formValues['member_start_date_high'] ?? NULL;
+      $defaults['member_start_date_relative'] = $this->_formValues['member_start_date_relative'] ?? NULL;
 
-      $defaults['member_end_date_low'] = CRM_Utils_Array::value('member_end_date_low', $this->_formValues);
-      $defaults['member_end_date_high'] = CRM_Utils_Array::value('member_end_date_high', $this->_formValues);
-      $defaults['member_end_date_relative'] = CRM_Utils_Array::value('member_end_date_relative', $this->_formValues);
+      $defaults['member_end_date_low'] = $this->_formValues['member_end_date_low'] ?? NULL;
+      $defaults['member_end_date_high'] = $this->_formValues['member_end_date_high'] ?? NULL;
+      $defaults['member_end_date_relative'] = $this->_formValues['member_end_date_relative'] ?? NULL;
     }
 
     return $defaults;
