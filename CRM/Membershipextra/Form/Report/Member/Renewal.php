@@ -298,7 +298,7 @@ class CRM_Membershipextra_Form_Report_Member_Renewal extends CRM_Report_Form {
             if (array_key_exists('title', $field)) {
               $this->_columnHeaders["{$tableName}_{$fieldName}"]['title'] = $field['title'];
             }
-            $this->_columnHeaders["{$tableName}_{$fieldName}"]['type'] = CRM_Utils_Array::value('type', $field);
+            $this->_columnHeaders["{$tableName}_{$fieldName}"]['type'] = $field['type'] ?? NULL;
           }
         }
       }
@@ -457,15 +457,15 @@ class CRM_Membershipextra_Form_Report_Member_Renewal extends CRM_Report_Form {
         $entryFound = TRUE;
       }
 
-      if ($value = CRM_Utils_Array::value('civicrm_contribution_financial_type_id', $row)) {
+      if ($value = $row['civicrm_contribution_financial_type_id'] ?? NULL) {
         $rows[$rowNum]['civicrm_contribution_financial_type_id'] = $contributionTypes[$value];
         $entryFound = TRUE;
       }
-      if ($value = CRM_Utils_Array::value('civicrm_contribution_contribution_status_id', $row)) {
+      if ($value = $row['civicrm_contribution_contribution_status_id'] ?? NULL) {
         $rows[$rowNum]['civicrm_contribution_contribution_status_id'] = $contributionStatus[$value];
         $entryFound = TRUE;
       }
-      if ($value = CRM_Utils_Array::value('civicrm_contribution_payment_instrument_id', $row)) {
+      if ($value = $row['civicrm_contribution_payment_instrument_id'] ?? NULL) {
         $rows[$rowNum]['civicrm_contribution_payment_instrument_id'] = $paymentInstruments[$value];
         $entryFound = TRUE;
       }

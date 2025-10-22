@@ -69,7 +69,7 @@ class CRM_Membershipextra_Utils {
             $membershipExtras[$membershipTypeId]['period_type'] = 'fixed';
             $membershipExtras[$membershipTypeId]['duration_unit'] = $membershipExtrasDetails['duration_unit'];
             $membershipExtras[$membershipTypeId]['duration_interval'] = $membershipExtrasDetails['duration_interval'];
-            $membershipExtras[$membershipTypeId]['fixed_period_start_day'] = CRM_Utils_Array::value('fixed_period_start_day', $membershipExtrasDetails);
+            $membershipExtras[$membershipTypeId]['fixed_period_start_day'] = $membershipExtrasDetails['fixed_period_start_day'] ?? NULL;
             $membershipExtras[$membershipTypeId]['fixed_period_rollover_day'] = $membershipExtrasDetails['fixed_period_rollover_day'];
 
             // unset custom field belong to rolling type

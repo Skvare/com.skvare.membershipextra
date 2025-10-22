@@ -320,8 +320,8 @@ class CRM_Membershipextra_Form_Report_Member_MembershipDonation extends CRM_Repo
             }
 
             $select[] = "{$field['dbAlias']} as {$tableName}_{$fieldName}";
-            $this->_columnHeaders["{$tableName}_{$fieldName}"]['title'] = CRM_Utils_Array::value('title', $field);
-            $this->_columnHeaders["{$tableName}_{$fieldName}"]['type'] = CRM_Utils_Array::value('type', $field);
+            $this->_columnHeaders["{$tableName}_{$fieldName}"]['title'] = $field['title'] ?? NULL;
+            $this->_columnHeaders["{$tableName}_{$fieldName}"]['type'] = $field['type'] ?? NULL;
           }
         }
       }
@@ -397,8 +397,8 @@ class CRM_Membershipextra_Form_Report_Member_MembershipDonation extends CRM_Repo
         if (array_key_exists('fields', $table)) {
           foreach ($table['fields'] as $fieldName => $field) {
             if (!empty($field['csv_display']) && !empty($field['no_display'])) {
-              $this->_columnHeaders["{$tableName}_{$fieldName}"]['title'] = CRM_Utils_Array::value('title', $field);
-              $this->_columnHeaders["{$tableName}_{$fieldName}"]['type'] = CRM_Utils_Array::value('type', $field);
+              $this->_columnHeaders["{$tableName}_{$fieldName}"]['title'] = $field['title'] ?? NULL;
+              $this->_columnHeaders["{$tableName}_{$fieldName}"]['type'] = $field['type'] ?? NULL;
             }
           }
         }
@@ -476,19 +476,19 @@ class CRM_Membershipextra_Form_Report_Member_MembershipDonation extends CRM_Repo
         $rows[$rowNum]['civicrm_contact_sort_name_hover'] = ts('View Contact Summary for this Contact.');
       }
 
-      if ($value = CRM_Utils_Array::value('civicrm_contribution_financial_type_id', $row)) {
+      if ($value = $row['civicrm_contribution_financial_type_id'] ?? NULL) {
         $rows[$rowNum]['civicrm_contribution_financial_type_id'] = $contributionTypes[$value];
         $entryFound = TRUE;
       }
-      if ($value = CRM_Utils_Array::value('civicrm_contribution_contribution_status_id', $row)) {
+      if ($value = $row['civicrm_contribution_contribution_status_id'] ?? NULL) {
         $rows[$rowNum]['civicrm_contribution_contribution_status_id'] = $contributionStatus[$value];
         $entryFound = TRUE;
       }
-      if ($value = CRM_Utils_Array::value('civicrm_contribution_payment_instrument_id', $row)) {
+      if ($value = $row['civicrm_contribution_payment_instrument_id'] ?? NULL) {
         $rows[$rowNum]['civicrm_contribution_payment_instrument_id'] = $paymentInstruments[$value];
         $entryFound = TRUE;
       }
-      if (($value = CRM_Utils_Array::value('civicrm_contribution_total_amount_sum', $row)) &&
+      if (($value = $row['civicrm_contribution_total_amount_sum'] ?? NULL) &&
         CRM_Core_Permission::check('access CiviContribute')
       ) {
         $url = CRM_Utils_System::url('civicrm/contact/view/contribution',
