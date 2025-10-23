@@ -27,7 +27,7 @@ class CRM_Membershipextra_Upgrader extends CRM_Extension_Upgrader_Base {
         'description' => "Membership Include/Exclude",
       ]);
     }
-    catch (CiviCRM_API3_Exception $e) {
+    catch (CRM_Core_Exception $e) {
       $msg = 'Exception thrown in ' . __METHOD__ . '. Likely the CustomSearch value already exists.';
       CRM_Core_Error::debug_log_message($msg, FALSE, 'com.skvare.membershipextra');
     }
