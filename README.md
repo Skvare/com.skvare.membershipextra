@@ -152,10 +152,30 @@ Membership change Rule error message:
 ![Screenshot](/images/membership_change_rule_error.png)
 
 
-## License
+## Credits
 
-AGPL-3.0 — see [LICENSE](http://www.gnu.org/licenses/agpl-3.0.html)
+Developed by [Skvare, LLC](https://skvare.com) for the CiviCRM community.
 
-## Maintainer
+## About Skvare
 
-Sunil Pawar, [Skvare](https://skvare.com) — sunil@skvare.com
+Skvare LLC specializes in CiviCRM development, Drupal integration, and providing technology solutions for nonprofit organizations, professional societies, membership-driven associations, and small businesses. We are committed to developing open source software that empowers our clients and the wider CiviCRM community.
+
+**Contact Information**:
+- Website: [https://skvare.com](https://skvare.com)
+- Email: info@skvare.com
+- GitHub: [https://github.com/Skvare](https://github.com/Skvare)
+
+## Support
+
+[Contact us](https://skvare.com/contact) for support or to learn more.
+
+---
+
+## Related Extensions
+
+You might also be interested in other Skvare CiviCRM extensions:
+
+- **Database Custom Field Check**: Prevents adding custom fields when table limits are reached
+- **Registration Button Label**: Customize button labels on event registration pages
+
+For a complete list of our open source contributions, visit our [GitHub organization page](https://github.com/Skvare).
