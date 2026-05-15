@@ -4,6 +4,7 @@
             $('.crm-membership-type-form-block-check_unauthenticated_contacts').insertAfter('.crm-membership-type-form-block-period_type');
             $('.crm-membership-type-form-block-limit_renewal').insertAfter('.crm-membership-type-form-block-period_type');
             $('.crm-membership-type-form-block-renewal_period').insertAfter('.crm-membership-type-form-block-period_type');
+            $('.crm-membership-type-form-block-levels_for_upgrade').insertAfter('.crm-membership-type-form-block-period_type');
             $('.crm-membership-type-form-block-restrict_to_groups').insertAfter('.crm-membership-type-form-block-period_type');
             showHidePeriodSettingsCustom();
             $('#period_type').change(function(){
@@ -28,6 +29,10 @@
 
 {crmScope extensionKey='com.skvare.membershipextra'}
 <table class="form-layout-compressed" style="display: none">
+    <tr class="crm-membership-type-form-block-levels_for_upgrade">
+        <td class="label">{$form.levels_for_upgrade.label}</td>
+        <td>{$form.levels_for_upgrade.html}</td>
+    </tr>
     <tr class="crm-membership-type-form-block-limit_renewal">
         <td class="label">{$form.limit_renewal.label}</td>
         <td>{$form.limit_renewal.html}<br/>

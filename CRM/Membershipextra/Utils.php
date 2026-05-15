@@ -4,40 +4,60 @@ use CRM_Membershipextra_ExtensionUtil as E;
 
 class CRM_Membershipextra_Utils {
 
+  /**
+   * Returns the list of custom setting names managed by this extension.
+   * Each setting is stored per membership type using the key format:
+   * "Membershipextra:<name>:<membershipTypeId>" in Civi::settings().
+   */
   public static function getSettingsNames(): array {
     return [
-      'limit_renewal',
-      'renewal_period_number',
-      'renewal_period_unit',
-      'restrict_to_groups',
-      'check_unauthenticated_contacts',
+      'limit_renewal',           // block renewal before the rollover window opens
+      'renewal_period_number',   // how many units before end date renewal opens (rolling)
+      'renewal_period_unit',     // unit for renewal_period_number (day/month/year)
+      'restrict_to_groups',      // limit membership availability to specific contact groups
+      'check_unauthenticated_contacts', // apply group check even for anonymous users
+      'levels_for_upgrade',      // membership type IDs this type is allowed to upgrade to
     ];
   }
 
   /**
-   * @param $typeID
+   * Returns all extension settings for a given membership type ID.
+   * Keys match getSettingsNames(); missing settings return NULL.
+   *
+   * @param int $typeID Membership type ID
    * @return array
    */
   public static function getSettings($typeID) {
     foreach (self::getSettingsNames() as $name) {
+      // Each setting is namespaced by extension + setting name + type ID
+      // so settings from different membership types never collide.
       $settings[$name] = Civi::settings()->get("Membershipextra:$name:$typeID");
     }
     return $settings ?? [];
   }
 
   /**
-   * @param $value
-   * @param $name
-   * @param $typeID
+   * Persists a single extension setting for a given membership type.
+   *
+   * @param mixed $value
+   * @param string $name One of getSettingsNames()
+   * @param int $typeID Membership type ID
    */
   public static function setSetting($value, $name, $typeID) {
     Civi::settings()->set("Membershipextra:$name:$typeID", $value);
   }
 
   /**
-   * Function to provide Membership type details for each membership type present on the online form.
-   * @param $form
-   * @return array
+   * Builds a map of all membership types configured on the contribution form,
+   * merging core CiviCRM membership type details with this extension's settings.
+   *
+   * Returns three values:
+   *   $formMembershipTypeIds  — array( price_option_id => membership_type_id )
+   *   $membershipExtras       — array( membership_type_id => merged settings + core details )
+   *   $groupConfigured        — flat unique list of all group IDs across all types (for restrict_to_groups)
+   *
+   * @param CRM_Core_Form $form
+   * @return array [$formMembershipTypeIds, $membershipExtras, $groupConfigured]
    */
   public static function getMembershipTypeConfiguredonForm($form) {
     $formMembershipTypeIds = $membershipExtras = $groupConfigured = [];
@@ -46,44 +66,49 @@ class CRM_Membershipextra_Utils {
         continue;
       }
       foreach ($fee['options'] as $option_id => $option) {
-        // if priceset contain the membership type, then proceed.
+        // Only process price options that represent a membership type.
         if (isset($option['membership_type_id'])) {
           $membershipTypeId = $option['membership_type_id'];
+
+          // Map price option ID → membership type ID for fast lookup during validation.
           $formMembershipTypeIds[$option_id] = $membershipTypeId;
 
-          // get Custom Setting for each Membership type
+          // Load this extension's custom settings for the membership type.
           $membershipExtras[$membershipTypeId] = CRM_Membershipextra_Utils::getSettings($membershipTypeId);
           $membershipExtras[$membershipTypeId]['my_id'] = $membershipTypeId;
 
-          // get membership details from civicrm core function.
+          // Load core CiviCRM membership type details (period type, duration, rollover dates).
           $membershipExtrasDetails = CRM_Member_BAO_MembershipType::getMembershipType($membershipTypeId);
           $membershipExtrasAdditionalDetails = [$membershipTypeId => $membershipExtrasDetails];
 
-          // convert rollover over period to Text format.
+          // Convert numeric rollover day/month values to human-readable text (e.g. "January 1").
           CRM_Member_BAO_MembershipType::convertDayFormat($membershipExtrasAdditionalDetails);
 
           $membershipExtrasDetails = reset($membershipExtrasAdditionalDetails);
 
-          // if membership of fixed type
           if ($membershipExtrasDetails['period_type'] == 'fixed') {
+            // Fixed memberships run on a calendar cycle (e.g. Jan 1 – Dec 31).
+            // Copy the fields relevant to fixed-period renewal validation.
             $membershipExtras[$membershipTypeId]['period_type'] = 'fixed';
             $membershipExtras[$membershipTypeId]['duration_unit'] = $membershipExtrasDetails['duration_unit'];
             $membershipExtras[$membershipTypeId]['duration_interval'] = $membershipExtrasDetails['duration_interval'];
             $membershipExtras[$membershipTypeId]['fixed_period_start_day'] = $membershipExtrasDetails['fixed_period_start_day'] ?? NULL;
             $membershipExtras[$membershipTypeId]['fixed_period_rollover_day'] = $membershipExtrasDetails['fixed_period_rollover_day'];
 
-            // unset custom field belong to rolling type
+            // Rolling-only settings are not applicable; remove them to avoid confusion.
             unset($membershipExtras[$membershipTypeId]['renewal_period_number']);
             unset($membershipExtras[$membershipTypeId]['renewal_period_unit']);
           }
           else {
+            // Rolling memberships expire relative to the join date (e.g. 1 year from signup).
             $membershipExtras[$membershipTypeId]['period_type'] = 'rolling';
 
-            // unset custom field belong to fixed type
+            // Fixed-only setting is not applicable; remove it to avoid confusion.
             unset($membershipExtras[$membershipTypeId]['limit_renewal']);
           }
 
-          // check group limitation applied on membership type
+          // Collect group IDs across all membership types so we can do a single
+          // contact-group lookup later instead of one API call per type.
           if (!empty($membershipExtras[$membershipTypeId]['restrict_to_groups'])) {
             $groupConfigured = array_merge($groupConfigured, $membershipExtras[$membershipTypeId]['restrict_to_groups']);
           }
@@ -91,16 +116,22 @@ class CRM_Membershipextra_Utils {
       }
     }
 
-    // this is all group configured acrros multiple membership types, make theme unique.
+    // Deduplicate group IDs that appear on multiple membership types.
     $groupConfigured = array_unique($groupConfigured);
 
     return [$formMembershipTypeIds, $membershipExtras, $groupConfigured];
   }
 
   /**
-   * Function to get current activie membership to provided contact id
-   * @param $contact_id
-   * @return array
+   * Returns all active, non-test memberships for a contact.
+   *
+   * Returns two arrays both keyed by membership ID (not membership type ID),
+   * so a contact with multiple active memberships of different types is handled correctly:
+   *   $contactMembershipType        — array( membership_id => membership_type_id )
+   *   $contactMembershipTypeDetails — array( membership_id => ['type' => ..., 'end_date' => ...] )
+   *
+   * @param int $contact_id
+   * @return array [$contactMembershipType, $contactMembershipTypeDetails]
    */
   public static function getContactMemberships($contact_id) {
     $contactMembershipType = [];
@@ -112,6 +143,8 @@ class CRM_Membershipextra_Utils {
 
     if (!empty($resultMembership['values'])) {
       foreach ($resultMembership['values'] as $membership) {
+        // Key by membership ID (not type ID) so the end_date can be retrieved
+        // by membership record when checking renewal windows.
         $contactMembershipType[$membership['id']] = $membership['membership_type_id'];
         $contactMembershipTypeDetails[$membership['id']] = ['type' => $membership['membership_type_id'], 'end_date' => $membership['end_date']];
       }
@@ -121,85 +154,99 @@ class CRM_Membershipextra_Utils {
   }
 
   /**
-   * Function to validate Fixed type of membership types
-   * @param $membershipTypeId
-   * @param $currentEndDate
-   * @param $membershipDetail
+   * Determines whether a fixed-period membership is within its renewal window.
+   *
+   * Renewal is allowed if:
+   *   (a) The membership has already expired (current date > end date), or
+   *   (b) The current date falls between the rollover day and the next period's end date.
+   *
+   * For yearly memberships the rollover day is evaluated against the membership's
+   * end year, so a "November 1" rollover always refers to the correct calendar year.
+   *
+   * Returns [bool $allowed, string $rolloverDayFormatted].
+   *
+   * @param int $membershipTypeId
+   * @param string $currentEndDate (Y-m-d)
+   * @param array $membershipDetail
    * @return array
    */
   public static function validation($membershipTypeId, $currentEndDate, $membershipDetail) {
-    // get end date membership year
+    // Extract the year from the current end date to anchor rollover calculations.
     $membershipEndYear = date('Y', strtotime($currentEndDate));
-    // this for when duration is in 'Year'
-    if ($membershipDetail['duration_unit'] == 'year') {
 
-      // get start date
+    if ($membershipDetail['duration_unit'] == 'year') {
       $startDate = date('Ymd', strtotime($membershipDetail['fixed_period_start_day'] . ' ' . $membershipEndYear));
-      // get rollover date based on current membership End year with rollover over day month
+      // Rollover day: the earliest date the member may renew in the current cycle.
       $rollverDay = date('Ymd', strtotime($membershipDetail['fixed_period_rollover_day'] . ' ' . $membershipEndYear));
 
-      // Calculate New end.
+      // The next period's end date is one year after the start date, minus one day.
       $dateNewEdnDate = date('Ymd', strtotime("{$startDate} - 1 day + 1 year"));
       $currentDate = date('Ymd');
 
-      // show when renewal is allowed
       $rollverDayFomated = CRM_Utils_Date::customFormat($rollverDay);
-      // if end is already over then user can renew membership.
-      if ($currentDate >  date('Ymd', strtotime($currentEndDate))) {
+
+      // If the membership has already expired, always allow renewal.
+      if ($currentDate > date('Ymd', strtotime($currentEndDate))) {
         return [TRUE, $rollverDayFomated];
       }
-      // current day is in between rollover day and actual end date, then allow renewal
+      // Allow if today is inside the rollover window (rollover day ≤ today ≤ next end date).
       if ($currentDate >= $rollverDay && $currentDate <= $dateNewEdnDate) {
-        // allow
         return [TRUE, $rollverDayFomated];
       }
 
-      // deny
       return [FALSE, $rollverDayFomated];
     }
     elseif ($membershipDetail['duration_unit'] == 'month') {
+      // For monthly fixed memberships, anchor the rollover to the end month/year.
       $membershipEndYear = date(' M Y', strtotime($currentEndDate));
       $rollverDay = date('Ymd', strtotime($membershipDetail['fixed_period_rollover_day'] . ' ' . $membershipEndYear));
       $currentDate = date('Ymd');
 
-      // show when renewal is allowed
       $rollverDayFomated = CRM_Utils_Date::customFormat($rollverDay);
 
-      // current day is greater than rollver day, then allow renewal
+      // Allow once today reaches or passes the rollover day.
       if ($currentDate >= $rollverDay) {
-        // allow
         return [TRUE, $rollverDayFomated];
       }
 
-      // deny
       return [FALSE, $rollverDayFomated];
     }
   }
 
   /**
-   * Function to validate rollover date for rolling membership tpyes
-   * @param $membershipTypeId
-   * @param $currentEndDate
-   * @param $membershipDetail
+   * Determines whether a rolling membership is within its renewal window.
+   *
+   * For rolling memberships the renewal window opens a configured period before
+   * the end date (e.g. 30 days). The rollover day is:
+   *   end_date - renewal_period_number renewal_period_unit - 1 day
+   *
+   * Example: end date = 2026-12-31, renewal_period = 30 days
+   *   rollover day = 2026-12-31 - 30 days - 1 day = 2026-11-30
+   *   → renewal opens on November 30.
+   *
+   * Returns [bool $allowed, string $rolloverDayFormatted].
+   *
+   * @param int $membershipTypeId
+   * @param string $currentEndDate (Y-m-d)
+   * @param array $membershipDetail
    * @return array
    */
   public static function validationRolling($membershipTypeId, $currentEndDate, $membershipDetail) {
-    // substract the day and month from current end date, that;s the rollover day for rolling membership type
+    // Calculate the rollover day by subtracting the configured renewal period from the end date.
+    // The "+ 1 day" offset is included in the period string so we subtract one extra day,
+    // meaning the window opens the day *before* the period boundary.
     $rolloverPeriodDay = $membershipDetail['renewal_period_number'] . ' ' . $membershipDetail['renewal_period_unit'] . ' + 1 day';
     $rollverDay = date('Ymd', strtotime("{$currentEndDate} - {$rolloverPeriodDay}"));
 
-    // show when renewal is allowed
     $rollverDayFomated = CRM_Utils_Date::customFormat($rollverDay);
     $currentDate = date('Ymd');
-    // current day is greater than rollver day, then allow renewal
+
+    // Allow renewal once today reaches or passes the rollover day.
     if ($currentDate >= $rollverDay) {
-      // allow
       return [TRUE, $rollverDayFomated];
     }
 
-    // deny
     return [FALSE, $rollverDayFomated];
   }
 
 }
-

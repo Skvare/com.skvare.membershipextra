@@ -137,6 +137,8 @@ function membershipextra_civicrm_buildForm($formName, &$form) {
     if ($form->_action & CRM_Core_Action::UPDATE) {
       unset($membershipTypes[$form->_id]);
     }
+    $form->add('select', 'levels_for_upgrade', ts('Member can change to'),
+      $membershipTypes, FALSE, ['class' => 'crm-select2 huge', 'multiple' => 1]);
 
     $form->addElement('checkbox', 'limit_renewal', E::ts('Limit renewal to 1 period ahead'));
 
@@ -181,6 +183,7 @@ function membershipextra_civicrm_postProcess($formName, &$form) {
         'renewal_period_unit' => $form->_submitValues['renewal_period_unit'] ?? '',
         'restrict_to_groups' => $form->_submitValues['restrict_to_groups'] ?? '',
         'check_unauthenticated_contacts' => $form->_submitValues['check_unauthenticated_contacts'] ?? 0,
+        'levels_for_upgrade' => $form->_submitValues['levels_for_upgrade'] ?? [],
       ];
       foreach ($membershipExtras as $name => $value) {
         CRM_Membershipextra_Utils::setSetting($value, $name, $id);
@@ -213,7 +216,6 @@ function membershipextra_civicrm_validateForm($formName, &$fields, &$files, &$fo
       break;
     }
   }
-
   $settings = CRM_Membershipextra_Utils::getSettings($submittedMembershipType);
 
   // get contact ID
@@ -238,12 +240,9 @@ function membershipextra_civicrm_validateForm($formName, &$fields, &$files, &$fo
   // get contact membership types
   [$contactMembershipType, $contactMembershipTypeDetails] =
     CRM_Membershipextra_Utils::getContactMemberships($contact_id);
-
   if (in_array($submittedMembershipType, $contactMembershipType)) {
     if (array_key_exists($submittedMembershipType, $membershipExtras)) {
-
       $membershipDetail = $membershipExtras[$submittedMembershipType];
-
       $validateRenewalLimit = TRUE;
       if ($membershipDetail['period_type'] == 'fixed' && !empty($membershipDetail['limit_renewal'])) {
 
@@ -273,6 +272,46 @@ function membershipextra_civicrm_validateForm($formName, &$fields, &$files, &$fo
       }
     }
   }
+
+  if (!empty($contactMembershipType)) {
+    $membershipTypesLevels = [];
+    foreach ($contactMembershipType as $memTypeId) {
+      $typeSettings = CRM_Membershipextra_Utils::getSettings($memTypeId);
+      if (!empty($typeSettings['levels_for_upgrade'])) {
+        $membershipTypesLevels[$memTypeId] = $typeSettings['levels_for_upgrade'];
+      }
+    }
+    if (!empty($membershipTypesLevels)) {
+      $membershipTypes = CRM_Member_PseudoConstant::membershipType();
+      $upgradeAllowed = FALSE;
+      foreach ($contactMembershipType as $contactMemType) {
+        if ($submittedMembershipType == $contactMemType) {
+          $upgradeAllowed = TRUE;
+          break;
+        }
+        if (in_array($submittedMembershipType, $membershipTypesLevels[$contactMemType] ?? [])) {
+          $upgradeAllowed = TRUE;
+          break;
+        }
+      }
+      if (!$upgradeAllowed) {
+        $errors[$key] = E::ts('Membership level change not allowed.');
+        foreach ($membershipTypesLevels as $mainID => $nextLevels) {
+          $helpTo = [];
+          foreach ($nextLevels as $nextLevel) {
+            if (!in_array($nextLevel, $formMembershipTypeIds)) {
+              continue;
+            }
+            $helpTo[] = $membershipTypes[$nextLevel];
+          }
+          $helpToType = implode(', ', $helpTo);
+          $help = E::ts('You can choose next level from %1 to %2.', [1 => $membershipTypes[$mainID], 2 => $helpToType]);
+          $errors[$key] .= '<br/>' . $help;
+        }
+      }
+    }
+  }
+
   // process restrict group id on membership type.
   $membershipDetail = $membershipExtras[$submittedMembershipType];
   if (!empty($membershipDetail['restrict_to_groups'])) {
