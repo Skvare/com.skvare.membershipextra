@@ -142,6 +142,16 @@ Custom membership search:
 
 ![Screenshot](/images/membership_custom_search.png)
 
+Membership change Rule settings:
+
+![Screenshot](/images/membership_change_rule_setting.png)
+
+
+Membership change Rule error message:
+
+![Screenshot](/images/membership_change_rule_error.png)
+
+
 ## License
 
 AGPL-3.0 — see [LICENSE](http://www.gnu.org/licenses/agpl-3.0.html)
