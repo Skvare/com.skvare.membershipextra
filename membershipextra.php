@@ -148,7 +148,7 @@ function membershipextra_civicrm_buildForm($formName, &$form) {
 
     $form->addElement('select', 'renewal_period_unit', E::ts('Disallow renewal until'), ['' => '-select'] + $units);
 
-    $groups = CRM_Core_PseudoConstant::nestedGroup();
+    $groups = CRM_Core_PseudoConstant::nestedGroup(TRUE, NULL, TRUE, "plain");
     $form->add('select', 'restrict_to_groups', E::ts('Only allow members of groups'),
       $groups, FALSE, ['class' => 'crm-select2 huge', 'multiple' => 1]);
 
