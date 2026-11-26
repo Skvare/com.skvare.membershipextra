@@ -67,7 +67,7 @@ function membershipextra_civicrm_disable() {
  *
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_upgrade
  */
-function membershipextra_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
+function membershipextra_civicrm_upgrade($op, ?CRM_Queue_Queue $queue = NULL) {
   return;
 }
 
